@@ -57,21 +57,30 @@ gradle -I /vagrant/av_avdpool_ng/init.gradle -b /vagrant/av_avdpool_ng/build.gra
 sudo -u postgres psql -d sogis -c 'GRANT USAGE ON SCHEMA av_avdpool_ng TO oereb_read;'
 sudo -u postgres psql -d sogis -c 'GRANT SELECT ON ALL TABLES IN SCHEMA av_avdpool_ng TO oereb_read;'
 
+# Import PLZ-Ortschaft
+wget http://data.geo.admin.ch/ch.swisstopo-vd.ortschaftenverzeichnis_plz/PLZO_INTERLIS_LV95.zip -O PLZO_INTERLIS_LV95.zip
+unzip -d /home/vagrant/ PLZO_INTERLIS_LV95.zip
+
+java -jar /home/vagrant/apps/ili2pg-3.11.0/ili2pg.jar --dbhost localhost --dbdatabase sogis --dbusr ddluser --dbpwd ddluser --nameByTopic --disableValidation --defaultSrsCode 2056 --strokeArcs --createFk --createGeomIdx --createFkIdx --createEnumTabs --beautifyEnumDispName --createMetaInfo --importTid --models PLZOCH1LV95D --dbschema av_plzortschaft --import /home/vagrant/PLZO_INTERLIS_LV95/PLZO_ITF_LV95.itf
+
+sudo -u postgres psql -d sogis -c 'GRANT USAGE ON SCHEMA av_plzortschaft TO oereb_read;'
+sudo -u postgres psql -d sogis -c 'GRANT SELECT ON ALL TABLES IN SCHEMA av_plzortschaft TO oereb_read;'
+
 # Import OEREB data (Transferstruktur)
 java -jar /home/vagrant/apps/ili2pg-3.11.0/ili2pg.jar --dbhost localhost --dbdatabase sogis --dbusr ddluser --dbpwd ddluser --createBasketCol --createDatasetCol --createMetaInfo --importTid --nameByTopic --disableValidation --defaultSrsCode 2056 --expandMultilingual --coalesceCatalogueRef --createFk --strokeArcs --createGeomIdx --createFkIdx --createEnumTabs --beautifyEnumDispName  --models "OeREBKRMvs_V1_1;OeREBKRMtrsfr_V1_1" --dbschema agi_oereb_trsfr --schemaimport
 
-java -jar /home/vagrant/apps/ili2pg-3.11.0/ili2pg.jar --dbhost localhost --dbdatabase sogis --dbusr ddluser --dbpwd ddluser --createBasketCol --createDatasetCol --createMetaInfo --importTid --nameByTopic --disableValidation --defaultSrsCode 2056 --expandMultilingual --coalesceCatalogueRef --createFk --strokeArcs --createGeomIdx --createFkIdx --createEnumTabs --beautifyEnumDispName --models OeREBKRMvs_V1_1 --dbschema agi_oereb_trsfr --import /vagrant/oereb-daten/ch/OeREBKRM_V1_1_Gesetze_20170101.xml
+java -jar /home/vagrant/apps/ili2pg-3.11.0/ili2pg.jar --dbhost localhost --dbdatabase sogis --dbusr ddluser --dbpwd ddluser --createBasketCol --createDatasetCol --createMetaInfo --importTid --nameByTopic --disableValidation --defaultSrsCode 2056 --expandMultilingual --coalesceCatalogueRef --createFk --strokeArcs --createGeomIdx --createFkIdx --createEnumTabs --beautifyEnumDispName --models OeREBKRMvs_V1_1 --dbschema agi_oereb_trsfr --dataset OeREBKRM_V1_1_Gesetze --import /vagrant/oereb-daten/ch/OeREBKRM_V1_1_Gesetze_20170101.xml
 
-java -jar /home/vagrant/apps/ili2pg-3.11.0/ili2pg.jar --dbhost localhost --dbdatabase sogis --dbusr ddluser --dbpwd ddluser --createBasketCol --createDatasetCol --createMetaInfo --importTid --nameByTopic --disableValidation --defaultSrsCode 2056 --expandMultilingual --coalesceCatalogueRef --createFk --strokeArcs --createGeomIdx --createFkIdx --createEnumTabs --beautifyEnumDispName --models OeREBKRMtrsfr_V1_1 --dbschema agi_oereb_trsfr --import /vagrant/oereb-daten/ch/ch.bazl.sicherheitszonenplan.oereb_20131118.xtf
+java -jar /home/vagrant/apps/ili2pg-3.11.0/ili2pg.jar --dbhost localhost --dbdatabase sogis --dbusr ddluser --dbpwd ddluser --createBasketCol --createDatasetCol --createMetaInfo --importTid --nameByTopic --disableValidation --defaultSrsCode 2056 --expandMultilingual --coalesceCatalogueRef --createFk --strokeArcs --createGeomIdx --createFkIdx --createEnumTabs --beautifyEnumDispName --models OeREBKRMtrsfr_V1_1 --dbschema agi_oereb_trsfr --dataset ch.bazl.sicherheitszonenplan --import /vagrant/oereb-daten/ch/ch.bazl.sicherheitszonenplan.oereb_20131118.xtf
 
-java -jar /home/vagrant/apps/ili2pg-3.11.0/ili2pg.jar --dbhost localhost --dbdatabase sogis --dbusr ddluser --dbpwd ddluser --createBasketCol --createDatasetCol --createMetaInfo --importTid --nameByTopic --disableValidation --defaultSrsCode 2056 --expandMultilingual --coalesceCatalogueRef --createFk --strokeArcs --createGeomIdx --createFkIdx --createEnumTabs --beautifyEnumDispName --models OeREBKRMtrsfr_V1_1 --dbschema agi_oereb_trsfr --import /vagrant/oereb-daten/ch/ch.bav.kataster-belasteter-standorte-oev.oereb_20171012.xtf
+java -jar /home/vagrant/apps/ili2pg-3.11.0/ili2pg.jar --dbhost localhost --dbdatabase sogis --dbusr ddluser --dbpwd ddluser --createBasketCol --createDatasetCol --createMetaInfo --importTid --nameByTopic --disableValidation --defaultSrsCode 2056 --expandMultilingual --coalesceCatalogueRef --createFk --strokeArcs --createGeomIdx --createFkIdx --createEnumTabs --beautifyEnumDispName --models OeREBKRMtrsfr_V1_1 --dbschema agi_oereb_trsfr --dataset ch.bav.kataster-belasteter-standorte-oev --import /vagrant/oereb-daten/ch/ch.bav.kataster-belasteter-standorte-oev.oereb_20171012.xtf
 
-java -jar /home/vagrant/apps/ili2pg-3.11.0/ili2pg.jar --dbhost localhost --dbdatabase sogis --dbusr ddluser --dbpwd ddluser --createBasketCol --createDatasetCol --createMetaInfo --importTid --nameByTopic --disableValidation --defaultSrsCode 2056 --expandMultilingual --coalesceCatalogueRef --createFk --strokeArcs --createGeomIdx --createFkIdx --createEnumTabs --beautifyEnumDispName --models OeREBKRMtrsfr_V1_1 --dbschema agi_oereb_trsfr --import /vagrant/oereb-daten/ch/ch.bazl.kataster-belasteter-standorte-zivilflugplaetze.oereb_20171012.xtf
+java -jar /home/vagrant/apps/ili2pg-3.11.0/ili2pg.jar --dbhost localhost --dbdatabase sogis --dbusr ddluser --dbpwd ddluser --createBasketCol --createDatasetCol --createMetaInfo --importTid --nameByTopic --disableValidation --defaultSrsCode 2056 --expandMultilingual --coalesceCatalogueRef --createFk --strokeArcs --createGeomIdx --createFkIdx --createEnumTabs --beautifyEnumDispName --models OeREBKRMtrsfr_V1_1 --dbschema agi_oereb_trsfr --dataset ch.bazl.kataster-belasteter-standorte-zivilflugplaetze --import /vagrant/oereb-daten/ch/ch.bazl.kataster-belasteter-standorte-zivilflugplaetze.oereb_20171012.xtf
 
-java -jar /home/vagrant/apps/ili2pg-3.11.0/ili2pg.jar --dbhost localhost --dbdatabase sogis --dbusr ddluser --dbpwd ddluser --createBasketCol --createDatasetCol --createMetaInfo --importTid --nameByTopic --disableValidation --defaultSrsCode 2056 --expandMultilingual --coalesceCatalogueRef --createFk --strokeArcs --createGeomIdx --createFkIdx --createEnumTabs --beautifyEnumDispName --models OeREBKRMtrsfr_V1_1 --dbschema agi_oereb_trsfr --import /vagrant/oereb-daten/ch/ch.bazl.projektierungszonen-flughafenanlagen.oereb_20161128.xtf
+java -jar /home/vagrant/apps/ili2pg-3.11.0/ili2pg.jar --dbhost localhost --dbdatabase sogis --dbusr ddluser --dbpwd ddluser --createBasketCol --createDatasetCol --createMetaInfo --importTid --nameByTopic --disableValidation --defaultSrsCode 2056 --expandMultilingual --coalesceCatalogueRef --createFk --strokeArcs --createGeomIdx --createFkIdx --createEnumTabs --beautifyEnumDispName --models OeREBKRMtrsfr_V1_1 --dbschema agi_oereb_trsfr --dataset ch.bazl.projektierungszonen-flughafenanlagen --import /vagrant/oereb-daten/ch/ch.bazl.projektierungszonen-flughafenanlagen.oereb_20161128.xtf
 
 sudo -u postgres psql -d sogis -c 'GRANT USAGE ON SCHEMA agi_oereb_trsfr TO oereb_read;'
 sudo -u postgres psql -d sogis -c 'GRANT SELECT ON ALL TABLES IN SCHEMA agi_oereb_trsfr TO oereb_read;'
 
-
-# Import NPLSO data and copy them into Transferstruktur
+# Import NPLSO data and copy to Transferstruktur
+# TODO

@@ -1,0 +1,114 @@
+import java.nio.file.Paths
+import de.undercouch.gradle.tasks.download.Download
+import ch.so.agi.gretl.tasks.*
+import ch.so.agi.gretl.steps.*
+
+description = """\n
+
+
+"""
+
+apply plugin: "ch.so.agi.gretl"
+apply plugin: "de.undercouch.download"
+
+def dbUrl = "jdbc:postgresql://192.168.50.5:5432/sogis"
+def dbUser = "ddluser"
+def dbPass = "ddluser"
+def dbSchema = "av_avdpool_ng"
+
+def itfBaseUrl = "http://geoweb.so.ch/av_datenabgabe/av_daten/itf_so/"
+def downloadDir = System.getProperty("java.io.tmpdir")
+//def downloadDir = rootProject.projectDir
+//def fosnrs = [2401,2402,2403,2404,2405,2406,2407,2408,2421,2422,2423,2424,2425,2426,2427,2428,2429,2445,2455,2456,2457,2461,2463,2464,2465,2471,2472,2473,2474,2475,2476,2477,2478,2479,2480,2481,2491,2492,2493,2495,2497,2498,2499,2500,2501,2502,2503,2511,2513,2514,2516,2517,2518,2519,2520,2523,2524,2525,2526,2527,2528,2529,2530,2532,2534,2535,2541,2542,2543,2544,2545,2546,2547,2548,2549,2550,2551,2553,2554,2555,2556,2571,2572,2573,2574,2575,2576,2578,2579,2580,2581,2582,2583,2584,2585,2586,2601,2611,2612,2613,2614,2615,2616,2617,2618,2619,2620,2621,2622]
+def fosnrs = [2549,2524]
+
+fosnrs.each { fosnr ->
+    task "downloadDataset_$fosnr"(type: Download) {
+        description = "Download dataset $fosnr"
+        doLast {
+            println "File downloaded to: " + downloadDir
+        }
+        src itfBaseUrl + "$fosnr"+"00.zip"
+        dest downloadDir
+    }
+
+
+    task "unzipDataset_$fosnr"(type: Copy) {
+        description = "Unzip dataset $fosnr"
+        doLast {
+            println "Dataset unzipped: " + downloadDir
+        }
+
+        from zipTree(file(Paths.get(downloadDir.toString(), "$fosnr"+"00.zip")))
+        into file(downloadDir)
+
+        // Only *.itf/ITF files in the zip file will be extracted.
+        include "*.itf" 
+        include "*.ITF" 
+
+        dependsOn "downloadDataset_$fosnr"        
+    }    
+
+    // TODO: how to deal with itf/ITF?
+    // There is sure as hell a groovy way.
+    task "replaceDataset_$fosnr"(type: Ili2pgReplace) {
+        description = "Ersetzt einen Datensatz (=XTF) in der PostgreSQL-Datenbank."
+        database = [dbUrl, dbUser, dbPass]
+        dbschema = dbSchema
+        models = "DM01AVSO24LV95"
+        disableValidation = true
+        dataset = file(Paths.get(downloadDir.toString(), "$fosnr"+"00.itf")).getName().take(4)
+        dataFile = file(Paths.get(downloadDir.toString(), "$fosnr"+"00.itf"))  
+
+        dependsOn "unzipDataset_$fosnr"
+        finalizedBy "removeFiles_$fosnr"
+    }
+
+    task "removeFiles_$fosnr"(type: Delete) {
+        description = "Remove files after successful import: $fosnr"
+
+        onlyIf {
+            project.getTasksByName("replaceDataset_$fosnr", false).getAt(0).state.failure == null
+        }
+
+        delete file(Paths.get(downloadDir.toString(), "$fosnr"+"00.zip")), 
+            file(Paths.get(downloadDir.toString(), "$fosnr"+"00.itf")),
+            file(Paths.get(downloadDir.toString(), "$fosnr"+"00.ITF")) 
+    }  
+}
+
+// Download all datasets
+task downloadAllDatasets() {
+    description = "This task performs all dynamic download tasks."
+    doLast {
+        println "All dynamic download tasks were performed."
+    }
+}
+
+downloadAllDatasets.dependsOn {
+    tasks.findAll { task -> task.name.startsWith('downloadDataset_') }
+}
+
+// Unzip all datasets
+task unzipAllDatasets() {
+    description = "This task performs all dynamic unzip tasks."
+    doLast {
+        println "All dynamic unzip tasks were performed."
+    }
+}
+
+unzipAllDatasets.dependsOn {
+    tasks.findAll { task -> task.name.startsWith('unzipDataset_') }
+}
+
+// Replace all datasets in database
+task replaceAllDatasets() {
+    description = "This task performs all dynamic replace dataset tasks."
+    doLast {
+        println "All dynamic replace dataset tasks were performed."
+    }
+}
+
+replaceAllDatasets.dependsOn {
+    tasks.findAll { task -> task.name.startsWith('replaceDataset_') }
+}
